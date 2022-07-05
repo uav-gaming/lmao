@@ -1,0 +1,12 @@
+org: tjhuu
+app: lmao
+service: lmao
+ 
+provider:
+  name: aws
+
+functions:
+  lmao:
+    handler: main
+
+ 
