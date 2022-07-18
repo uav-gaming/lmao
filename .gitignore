@@ -23,5 +23,7 @@ go.work
 # Main binary
 lmao
 
-# Serverless
+# Temp
+bin/
+.vscode/*.log
 .serverless
