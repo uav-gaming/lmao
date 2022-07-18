@@ -15,7 +15,6 @@
       devShell = pkgs.mkShell {
         buildInputs = with pkgs; [
           act
-          docker
           go_1_18
           nodePackages.serverless
         ];  

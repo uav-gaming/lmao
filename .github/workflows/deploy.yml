@@ -14,8 +14,7 @@ jobs:
         with:
           go-version: '^1.18.3'
       - name: Build binary
-        run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/main lmao.go && zip deployment.zip build/lmao
+        run: make build
       - name: serverless deploy
         uses: serverless/github-action@v3.1
         with:
