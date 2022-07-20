@@ -61,7 +61,7 @@ func HandleRequest(ctx context.Context, body []byte) (string, error) {
 
 func main() {
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Info("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
+		log.Infof("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 	err := s.Open()
 	if err != nil {
