@@ -7,7 +7,7 @@ clean:
 	rm -rf ./bin
 
 deploy: build
-	sls deploy --verbose function -f lmao
+	sls deploy function --verbose -f lmao
 
 deploy-full: clean build
 	sls deploy --verbose
