@@ -14,7 +14,9 @@
     in rec {
       devShell = pkgs.mkShell {
         buildInputs = with pkgs; [
+          act
           go_1_18
+          nodePackages.serverless
         ];  
       };
     }

@@ -1,3 +1,7 @@
 {
-  "makefile.extensionOutputFolder": "./.vscode"
+  "makefile.extensionOutputFolder": "./.vscode",
+  "yaml.schemas": {
+    "https://json.schemastore.org/github-workflow.json": "file:///home/tjhu/workspace/lmao/.github/workflows/deploy.yml"
+  },
+  "nixEnvSelector.nixFile": "${workspaceRoot}/shell.nix"
 }
