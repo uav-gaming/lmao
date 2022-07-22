@@ -18,5 +18,7 @@ func HandleEvent(event discord.InteractionEvent) (*api.InteractionResponse, *Han
 		}, nil
 	}
 
-	return nil, NewHandlerError(http.StatusOK, fmt.Sprint("Unrecognized interaction type: ", interaction_type))
+	error_message := fmt.Sprint("Unrecognized interaction type: ", interaction_type)
+	logrus.Warn(error_message)
+	return nil, NewHandlerError(http.StatusBadRequest, error_message)
 }

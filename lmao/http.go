@@ -3,6 +3,7 @@ package lmao
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/diamondburned/arikawa/v3/api"
@@ -24,7 +25,7 @@ func ToHttpResponse(r *api.InteractionResponse) (Response, error) {
 		return Response{}, err
 	}
 	return Response{
-		StatusCode: 200,
+		StatusCode: http.StatusOK,
 		Body:       string(buffer),
 	}, nil
 }
