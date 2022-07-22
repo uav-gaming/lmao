@@ -45,16 +45,16 @@ const REQUEST string = `{
 	  "time": "09/Jun/2022:11:22:33 +0000",
 	  "timeEpoch": 123
 	},
-	"body": "{\"application_id\":\"123\",\\"id\":\"123\",\"token\":\"xyz\",\"type\":1,\"user\":{\"avatar\":\"xyz\",\"avatar_decoration\":null,\"discriminator\":\"1234\",\"id\":\"123\",\"public_flags\":0,\"username\":\"dude\"},\"version\":1}",
+	"body": "{\"application_id\":\"123\",\"id\":\"123\",\"token\":\"xyz\",\"type\":1,\"user\":{\"avatar\":\"xyz\",\"avatar_decoration\":null,\"discriminator\":\"1234\",\"id\":\"123\",\"public_flags\":0,\"username\":\"dude\"},\"version\":1}",
 	"isBase64Encoded": false
   }`
 
-func TestFilter(t *testing.T) {
+func TestRequestUnmarshal(t *testing.T) {
 	var request Request
-	err := json.Unmarshal([]byte(REQUEST), &request)
-	assert.NotEqual(t, err, nil)
+	assert.NoError(t, json.Unmarshal([]byte(REQUEST), &request))
+	assert.Equal(t, "POST", request.RequestContext.HTTP.Method)
 
 	var event discord.InteractionEvent
-	err2 := event.UnmarshalJSON([]byte(request.Body))
-	assert.NotEqual(t, err2, nil)
+	assert.NoError(t, event.UnmarshalJSON([]byte(request.Body)))
+	assert.Equal(t, "dude", event.User.Username)
 }
