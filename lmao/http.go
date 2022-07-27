@@ -2,7 +2,6 @@ package lmao
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -28,27 +27,4 @@ func ToHttpResponse(r *api.InteractionResponse) (Response, error) {
 		StatusCode: http.StatusOK,
 		Body:       string(buffer),
 	}, nil
-}
-
-type HandlerError struct {
-	StatusCode int
-	Message    string
-}
-
-func NewHandlerError(status_code int, message string) *HandlerError {
-	return &HandlerError{
-		StatusCode: status_code,
-		Message:    message,
-	}
-}
-
-func (e *HandlerError) Error() string {
-	return fmt.Sprint(e.StatusCode, ": ", e.Message)
-}
-
-func (e *HandlerError) ToResponse() Response {
-	return Response{
-		StatusCode: e.StatusCode,
-		Body:       fmt.Sprintf("{message: %s}", e.Message),
-	}
 }

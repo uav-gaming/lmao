@@ -27,7 +27,7 @@ func HandleRequest(ctx context.Context, request lmao.Request) (lmao.Response, er
 		return lmao.Response{}, errors.New("invalid request format")
 	}
 
-	response, err := lmao.HandleEvent(event)
+	response, err := lmao.HandleInteraction(event)
 	if err != nil {
 		return err.ToResponse(), nil
 	}

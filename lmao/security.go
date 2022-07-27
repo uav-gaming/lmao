@@ -10,12 +10,7 @@ import (
 var discord_public_key []byte
 
 func init() {
-	public_key := GetenvMust("DISCORD_PUBLIC_KEY")
-	decoded_public_key, err := hex.DecodeString(public_key)
-	if err != nil {
-		logrus.Fatal("Invalid discord public key: ", public_key)
-	}
-	discord_public_key = decoded_public_key
+	discord_public_key = GetenvMustHex("DISCORD_PUBLIC_KEY")
 }
 
 type VerificationError struct {
