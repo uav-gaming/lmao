@@ -1,7 +1,12 @@
 .PHONY: build clean deploy
 
+BUILD_TIME=$(shell date +%s)
+
+GOFLAGS+=CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+LDFLAGS+=-X main.BuildTime=${BUILD_TIME}
+
 build:
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/lmao lmao.go
+	${GOFLAGS} go build -o bin/lmao -v -ldflags "${LDFLAGS}" lmao.go 
 
 clean:
 	rm -rf ./bin
