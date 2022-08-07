@@ -12,7 +12,6 @@ require (
 
 require (
 	github.com/aws/aws-lambda-go v1.32.1
-	github.com/aws/aws-sdk-go v1.44.63
 	github.com/diamondburned/arikawa/v3 v3.0.0-rc.6
 	github.com/gorilla/schema v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

@@ -23,8 +23,9 @@ var (
 	// Variables populated by build script.
 	BuildTime string
 
-	// Variables populated by `init`s.
+	// Variables populated by `init`s and other runtime functions.
 	BuildInfo map[string]interface{}
+	bot       *lmao.LMAO
 )
 
 // Initialize build info
@@ -51,7 +52,7 @@ func init() {
 func HandleRequest(ctx context.Context, request lmao.Request) (lmao.Response, error) {
 	logrus.Info(request)
 
-	if !lmao.VerifyRequest(request) {
+	if !bot.VerifyRequest(request) {
 		logrus.Warn("Request verification failed.")
 		return lmao.Response{
 			StatusCode: http.StatusUnauthorized,
@@ -64,7 +65,7 @@ func HandleRequest(ctx context.Context, request lmao.Request) (lmao.Response, er
 		return lmao.Response{}, errors.New("invalid request format")
 	}
 
-	response, err := lmao.HandleInteraction(event)
+	response, err := bot.HandleInteraction(event)
 	if err != nil {
 		return err.ToResponse(), nil
 	}
@@ -78,6 +79,12 @@ func main() {
 	})
 	logrus.SetReportCaller(true) // Log caller.
 
-	logrus.Info("Startup with build info: ", BuildInfo)
+	logrus.Info("Starting up with build info: ", BuildInfo)
+
+	bot = lmao.NewLMAO()
+	if bot == nil {
+		logrus.Fatal("Failed to init bot")
+	}
+
 	lambda.Start(HandleRequest)
 }

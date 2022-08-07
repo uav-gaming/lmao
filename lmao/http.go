@@ -8,12 +8,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/api"
 )
 
-// type Request struct {
-// 	Headers        map[string]interface{}                 `json:"headers"`
-// 	Body           string                                 `json:"body"`
-// 	RequestContext events.LambdaFunctionURLRequestContext `json:"requestContext"`
-// }
-
 type Request = events.LambdaFunctionURLRequest
 
 type Response = events.LambdaFunctionURLResponse
