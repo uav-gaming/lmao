@@ -10,7 +10,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/sirupsen/logrus"
-	"github.com/tjhu/lmao/lmao/discordapi"
+	"github.com/tjhu/discord_api/discord_api"
 	"github.com/tjhu/lmao/lmao/interaction/command"
 	"github.com/tjhu/lmao/lmao/interaction/ping"
 )
@@ -18,7 +18,7 @@ import (
 // A threadsafe instance of the LMAO discord bot for handling requests.
 type LMAO struct {
 	discord_public_key []byte
-	da                 *discordapi.DiscordApi
+	da                 *discord_api.DiscordApi
 }
 
 // Create a LMAO instance.
