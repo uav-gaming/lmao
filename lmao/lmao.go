@@ -10,7 +10,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/sirupsen/logrus"
-	"github.com/tjhu/discord_api/discord_api"
+	"github.com/tjhu/discord_api"
 	"github.com/tjhu/lmao/lmao/interaction/command"
 	"github.com/tjhu/lmao/lmao/interaction/ping"
 )
