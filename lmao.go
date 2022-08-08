@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"flag"
+	"io/ioutil"
+	"net/http"
 	"os"
+	"strings"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/bwmarrin/discordgo"
@@ -32,6 +37,10 @@ var (
 			Name:        "basic-command",
 			Description: "Basic command",
 		},
+		{
+			Name:        "progress",
+			Description: "Get grind75 progress",
+		},
 	}
 
 	commandHandlers = map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
@@ -42,6 +51,32 @@ var (
 					Content: "Hey there! Congratulations, you just executed your first slash command",
 				},
 			})
+		},
+		"progress": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			res := strings.Fields(i.Message.Content)
+			username := res[1]
+
+			if username == "" {
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "Please provide a username.",
+					},
+				})
+			} else {
+				progress := getProgress(username)
+				var progressStr strings.Builder
+				for key, value := range progress {
+					progressStr.WriteString(key + ": " + value + "\n")
+				}
+				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: progressStr.String(),
+					},
+				})
+			}
+
 		},
 	}
 )
@@ -79,4 +114,67 @@ func main() {
 	defer s.Close()
 
 	lambda.Start(HandleRequest)
+}
+
+// TODO: finish adding the problems
+var grind75List = []string{"Two Sum", "Valid Parentheses", "Merge Two Sorted Lists", "Best Time to Buy and Sell Stock", "Valid Palindrome", "Invert Binary Tree", "Valid Anagram", "Binary Search"}
+
+type ResponseData struct {
+	Data struct {
+		RecentSubmissionList []struct {
+			Title string `json:"title"`
+		} `json:"recentAcSubmissionList"`
+	} `json:"data"`
+}
+
+// get progress and returns a map to display the progress
+func getProgress(username string) map[string]string {
+	//add DB call here
+	progressMap := make(map[string]string)
+	for _, problem := range grind75List {
+		progressMap[problem] = "❌"
+	}
+	updateProgress(username, progressMap) //placeholder for now
+	return progressMap
+}
+
+// graphql query to get the new progress and update the progress map
+func updateProgress(username string, progressMap map[string]string) {
+	query := map[string]string{
+		"query": `
+            { 
+                recentAcSubmissionList(username: "` + username + `", limit: 20) {
+					title
+				}
+            }
+        `,
+	}
+	queryAsJson, _ := json.Marshal(query)
+	request, err := http.NewRequest("POST", "https://leetcode.com/graphql", bytes.NewBuffer(queryAsJson))
+	request.Header.Add("Content-Type", "application/json")
+
+	client := &http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		panic(err)
+	}
+	defer response.Body.Close()
+	data, _ := ioutil.ReadAll(response.Body)
+
+	data_struct := ResponseData{}
+	json.Unmarshal(data, &data_struct)
+
+	submissionListStruct := data_struct.Data.RecentSubmissionList
+
+	submissionList := make([]string, len(submissionListStruct))
+	for i, submission := range submissionListStruct {
+		submissionList[i] = submission.Title
+	}
+
+	for _, problem := range submissionList {
+		_, isPresent := progressMap[problem]
+		if isPresent {
+			progressMap[problem] = "✅"
+		}
+	}
 }
