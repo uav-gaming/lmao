@@ -40,6 +40,14 @@ var (
 		{
 			Name:        "progress",
 			Description: "Get grind75 progress",
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "username",
+					Description: "leetcode username",
+					Required:    true,
+				},
+			},
 		},
 	}
 
@@ -53,8 +61,7 @@ var (
 			})
 		},
 		"progress": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			res := strings.Fields(i.Message.Content)
-			username := res[1]
+			username := i.ApplicationCommandData().Options[0].Value.(string)
 
 			if username == "" {
 				s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -65,6 +72,7 @@ var (
 				})
 			} else {
 				progress := getProgress(username)
+				//build message string
 				var progressStr strings.Builder
 				for key, value := range progress {
 					progressStr.WriteString(key + ": " + value + "\n")
@@ -76,7 +84,6 @@ var (
 					},
 				})
 			}
-
 		},
 	}
 )
