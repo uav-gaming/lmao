@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/sirupsen/logrus"
-	"github.com/tjhu/lmao/lmao"
+	"github.com/uav-gaming/lmao/lmao"
 )
 
 // Constants

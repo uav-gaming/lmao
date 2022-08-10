@@ -1,10 +1,10 @@
-module github.com/tjhu/lmao
+module github.com/uav-gaming/lmao
 
 go 1.18
 
 require (
 	github.com/sirupsen/logrus v1.9.0
-	github.com/tjhu/discord_api v0.0.0-20220807221456-75c53e42b423
+	github.com/uav-gaming/discord_api v0.0.0-20220810223223-4a97e0c3fddf
 )
 
 require (
