@@ -65,10 +65,7 @@ func HandleRequest(ctx context.Context, request lmao.Request) (lmao.Response, er
 		return lmao.Response{}, errors.New("invalid request format")
 	}
 
-	response, err := bot.HandleInteraction(event)
-	if err != nil {
-		return err.ToResponse(), nil
-	}
+	response := bot.HandleInteraction(event)
 	return lmao.ToHttpResponse(response)
 }
 
@@ -81,7 +78,7 @@ func main() {
 
 	logrus.Info("Starting up with build info: ", BuildInfo)
 
-	bot = lmao.NewLMAO()
+	bot = lmao.NewLMAO(lmao.GetenvMustStr("DISCORD_TOKEN"), lmao.GetenvMustHex("DISCORD_PUBLIC_KEY"), lmao.GetenvMustValidSnowflake[discord.AppID]("DISCORD_APPLICATION_ID"))
 	if bot == nil {
 		logrus.Fatal("Failed to init bot")
 	}

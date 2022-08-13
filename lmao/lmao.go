@@ -5,41 +5,59 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/sirupsen/logrus"
-	"github.com/uav-gaming/discord_api"
 	"github.com/uav-gaming/lmao/lmao/interaction/command"
 	"github.com/uav-gaming/lmao/lmao/interaction/ping"
 )
 
 // A threadsafe instance of the LMAO discord bot for handling requests.
 type LMAO struct {
-	discord_public_key []byte
-	da                 *discord_api.DiscordApi
+	client         *api.Client
+	public_key     []byte
+	application_id discord.AppID
 }
 
 // Create a LMAO instance.
 // It will check against its build time against the current bot commands registered in discord.
 // If the the build time is newer, currently registered commands will be replaced by the new ones.
-func NewLMAO() *LMAO {
+func NewLMAO(token string, public_key []byte, application_id discord.AppID) *LMAO {
+	lmao := LMAO{
+		api.NewClient(token),
+		public_key,
+		application_id,
+	}
+
 	// TODO: check for existing commands.
+	cmds, err := lmao.client.Commands(application_id)
+	if err != nil {
+		logrus.Error("Failed to get commands: ", cmds)
+		return nil
+	}
+	logrus.Infof("Existing commands: %+v", cmds)
 
 	// TODO: Register commands.
 
-	return &LMAO{}
+	return &lmao
 }
 
 // Handles a discord interaction event and returns an interaction response.
-func (bot *LMAO) HandleInteraction(event discord.InteractionEvent) (*api.InteractionResponse, *LMAOError) {
+// It always sends back a discord message response to let the user know what happened.
+func (bot *LMAO) HandleInteraction(event discord.InteractionEvent) *api.InteractionResponse {
 	logrus.Info("Received interaction event: ", event)
 	resp, err := bot.handleInteraction(event)
 	if err != nil {
-		return resp, NewLMAOError(http.StatusBadRequest, err.Error())
+		resp = &api.InteractionResponse{
+			Type: api.MessageInteractionWithSource,
+			Data: &api.InteractionResponseData{
+				Content: option.NewNullableString(err.Error()),
+			},
+		}
 	}
-	return resp, nil
+	return resp
 }
 
 func (bot *LMAO) handleInteraction(event discord.InteractionEvent) (*api.InteractionResponse, error) {
@@ -81,5 +99,5 @@ func (bot *LMAO) VerifyRequest(request Request) bool {
 	}
 	body := request.Body
 
-	return ed25519.Verify(bot.discord_public_key, []byte(timestamp+body), decoded_signature)
+	return ed25519.Verify(bot.public_key, []byte(timestamp+body), decoded_signature)
 }

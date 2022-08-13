@@ -3,6 +3,7 @@ package lmao
 import (
 	"encoding/hex"
 	"os"
+	"reflect"
 	"strconv"
 
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -36,6 +37,15 @@ func GetenvMustUint64(name string) uint64 {
 	return value
 }
 
-func GetenvMustSnowflake(name string) discord.Snowflake {
-	return discord.Snowflake(GetenvMustUint64(name))
+type ISnowflake interface {
+	discord.Snowflake | discord.AppID | discord.UserID
+	IsValid() bool
+}
+
+func GetenvMustValidSnowflake[T ISnowflake](name string) T {
+	val := T(GetenvMustUint64(name))
+	if !val.IsValid() {
+		logrus.Fatal("Invalid ", reflect.TypeOf(val), " value of ", val, " from ", name)
+	}
+	return val
 }
