@@ -32,6 +32,8 @@ functions:
   lmao:
     handler: bin/lmao
     memorySize: 128
+    # Doesn't work atm: https://github.com/serverless/serverless/issues/4638
+    # You have to manually set it from AWS.
     environment:
       DISCORD_TOKEN: ${env:DISCORD_TOKEN}
       DISCORD_APPLICATION_ID: ${env:DISCORD_APPLICATION_ID}

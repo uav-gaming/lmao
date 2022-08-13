@@ -50,8 +50,9 @@ func init() {
 }
 
 func HandleRequest(ctx context.Context, request lmao.Request) (lmao.Response, error) {
-	logrus.Info(request)
+	logrus.Infof("Received request %+v", request)
 
+	// Verify request signature.
 	if !bot.VerifyRequest(request) {
 		logrus.Warn("Request verification failed.")
 		return lmao.Response{
@@ -59,6 +60,7 @@ func HandleRequest(ctx context.Context, request lmao.Request) (lmao.Response, er
 		}, nil
 	}
 
+	// Parse and handle request.
 	var event discord.InteractionEvent
 	if err := event.UnmarshalJSON([]byte(request.Body)); err != nil {
 		logrus.Error("Failed to unmarshal request body: ", request.Body)
@@ -78,7 +80,7 @@ func main() {
 
 	logrus.Info("Starting up with build info: ", BuildInfo)
 
-	bot = lmao.NewLMAO(lmao.GetenvMustStr("DISCORD_TOKEN"), lmao.GetenvMustHex("DISCORD_PUBLIC_KEY"), lmao.GetenvMustValidSnowflake[discord.AppID]("DISCORD_APPLICATION_ID"))
+	bot = lmao.NewLMAO(lmao.GetenvMustStr("DISCORD_TOKEN"), lmao.GetenvMustEd25519PubKey("DISCORD_PUBLIC_KEY"), lmao.GetenvMustValidSnowflake[discord.AppID]("DISCORD_APPLICATION_ID"))
 	if bot == nil {
 		logrus.Fatal("Failed to init bot")
 	}

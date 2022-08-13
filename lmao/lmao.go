@@ -1,6 +1,7 @@
 package lmao
 
 import (
+	"bytes"
 	"crypto/ed25519"
 	"encoding/hex"
 	"errors"
@@ -17,16 +18,18 @@ import (
 // A threadsafe instance of the LMAO discord bot for handling requests.
 type LMAO struct {
 	client         *api.Client
-	public_key     []byte
+	public_key     ed25519.PublicKey
 	application_id discord.AppID
 }
 
 // Create a LMAO instance.
 // It will check against its build time against the current bot commands registered in discord.
 // If the the build time is newer, currently registered commands will be replaced by the new ones.
-func NewLMAO(token string, public_key []byte, application_id discord.AppID) *LMAO {
+func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.AppID) *LMAO {
+
+	logrus.Info("Initilizing lmao with public key: ", hex.EncodeToString(public_key), " and app_id: ", application_id)
 	lmao := LMAO{
-		api.NewClient(token),
+		api.NewClient("Bot " + token),
 		public_key,
 		application_id,
 	}
@@ -34,7 +37,7 @@ func NewLMAO(token string, public_key []byte, application_id discord.AppID) *LMA
 	// TODO: check for existing commands.
 	cmds, err := lmao.client.Commands(application_id)
 	if err != nil {
-		logrus.Error("Failed to get commands: ", cmds)
+		logrus.Error("Failed to get commands: ", err)
 		return nil
 	}
 	logrus.Infof("Existing commands: %+v", cmds)
@@ -61,6 +64,9 @@ func (bot *LMAO) HandleInteraction(event discord.InteractionEvent) *api.Interact
 }
 
 func (bot *LMAO) handleInteraction(event discord.InteractionEvent) (*api.InteractionResponse, error) {
+	if event.AppID != bot.application_id {
+		logrus.Error("Incorrect application id: ", event.AppID, " vs ", bot.application_id)
+	}
 	interaction_type := event.Data.InteractionType()
 	switch event.Data.InteractionType() {
 	case discord.PingInteractionType:
@@ -80,24 +86,33 @@ func (bot *LMAO) handleInteraction(event discord.InteractionEvent) (*api.Interac
 // Return true iff the request compiles with the discord authorization protocol.
 // https://discord.com/developers/docs/interactions/receiving-and-responding#security-and-authorization
 func (bot *LMAO) VerifyRequest(request Request) bool {
+	// Prepare signature.
 	// TODO: get rid of the case sensitivity.
 	signature := request.Headers["x-signature-ed25519"]
 	if len(signature) <= 0 {
 		logrus.Warn("Http header x-signature-ed25519 not set")
 		return false
 	}
-	decoded_signature, err := hex.DecodeString(signature)
+	sig, err := hex.DecodeString(signature)
 	if err != nil {
-		logrus.Warn("Invliad request signature: ", signature)
+		logrus.Warn("Non-hex request signature: ", signature)
+		return false
+	}
+	if len(sig) != ed25519.SignatureSize || sig[63]&224 != 0 {
+		logrus.Warn("Invalid ed25519 signature format: ", signature)
 		return false
 	}
 
+	// Prepare message.
+	var msg bytes.Buffer
 	timestamp := request.Headers["x-signature-timestamp"]
 	if len(timestamp) <= 0 {
 		logrus.Warn("Http header x-signature-timestamp not set")
 		return false
 	}
-	body := request.Body
+	msg.WriteString(timestamp)
+	msg.WriteString(request.Body)
 
-	return ed25519.Verify(bot.public_key, []byte(timestamp+body), decoded_signature)
+	// Verify the signature.
+	return ed25519.Verify(bot.public_key, msg.Bytes(), sig)
 }

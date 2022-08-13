@@ -1,6 +1,7 @@
 package lmao
 
 import (
+	"crypto/ed25519"
 	"encoding/hex"
 	"os"
 	"reflect"
@@ -14,7 +15,7 @@ import (
 // Crash the program if it's not set.
 func GetenvMustStr(name string) string {
 	value := os.Getenv(name)
-	if len(value) <= 0 {
+	if value == "" {
 		logrus.Fatal("env ", name, " not set")
 	}
 	return value
@@ -27,6 +28,14 @@ func GetenvMustHex(name string) []byte {
 		logrus.Fatal("Invalid discord public key: ", value)
 	}
 	return decoded_value
+}
+
+func GetenvMustEd25519PubKey(name string) ed25519.PublicKey {
+	key := GetenvMustHex(name)
+	if length := len(key); length != ed25519.PublicKeySize {
+		logrus.Fatal("ed25519: bad public key length: ", length)
+	}
+	return key
 }
 
 func GetenvMustUint64(name string) uint64 {
