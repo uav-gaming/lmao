@@ -32,3 +32,7 @@ functions:
   lmao:
     handler: bin/lmao
     memorySize: 128
+    environment:
+      DISCORD_TOKEN: ${env:DISCORD_TOKEN}
+      DISCORD_APPLICATION_ID: ${env:DISCORD_APPLICATION_ID}
+      DISCORD_PUBLIC_KEY: ${env:DISCORD_PUBLIC_KEY}
