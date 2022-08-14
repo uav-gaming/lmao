@@ -32,6 +32,7 @@ functions:
   lmao:
     handler: bin/lmao
     memorySize: 128
+    url: true
     # Doesn't work atm: https://github.com/serverless/serverless/issues/4638
     # You have to manually set it from AWS.
     environment:
