@@ -80,9 +80,10 @@ func main() {
 
 	logrus.Info("Starting up with build info: ", BuildInfo)
 
-	bot = lmao.NewLMAO(lmao.GetenvMustStr("DISCORD_TOKEN"), lmao.GetenvMustEd25519PubKey("DISCORD_PUBLIC_KEY"), lmao.GetenvMustValidSnowflake[discord.AppID]("DISCORD_APPLICATION_ID"))
-	if bot == nil {
-		logrus.Fatal("Failed to init bot")
+	var err error
+	bot, err = lmao.NewLMAO(lmao.GetenvMustStr("DISCORD_TOKEN"), lmao.GetenvMustEd25519PubKey("DISCORD_PUBLIC_KEY"), lmao.GetenvMustValidSnowflake[discord.AppID]("DISCORD_APPLICATION_ID"))
+	if err != nil {
+		logrus.Fatal("Failed to init bot: ", err)
 	}
 
 	lambda.Start(HandleRequest)

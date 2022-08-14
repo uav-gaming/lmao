@@ -25,8 +25,7 @@ type LMAO struct {
 // Create a LMAO instance.
 // It will check against its build time against the current bot commands registered in discord.
 // If the the build time is newer, currently registered commands will be replaced by the new ones.
-func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.AppID) *LMAO {
-
+func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.AppID) (*LMAO, error) {
 	logrus.Info("Initilizing lmao with public key: ", hex.EncodeToString(public_key), " and app_id: ", application_id)
 	lmao := LMAO{
 		api.NewClient("Bot " + token),
@@ -34,17 +33,42 @@ func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.
 		application_id,
 	}
 
-	// TODO: check for existing commands.
+	// Check for existing commands.
+	// And register/update commands if necessary.
+	// Updating means deleting existing commands and registering new ones for simplicity.
+	var cmdsToDelete []*discord.Command
 	cmds, err := lmao.client.Commands(application_id)
 	if err != nil {
-		logrus.Error("Failed to get commands: ", err)
-		return nil
+		logrus.Warn("Failed to get commands: ", err, ". Attempting to register for new ones.")
+	} else {
+		logrus.Infof("Existing commands: %+v", cmds)
+		// TODO: check if commands are acutally needed to be updated.
+		for _, cmd := range cmds {
+			cmdsToDelete = append(cmdsToDelete, &cmd)
+		}
 	}
-	logrus.Infof("Existing commands: %+v", cmds)
 
-	// TODO: Register commands.
+	// Delete commands.
+	logrus.Infof("Deleting commands: %+v", cmdsToDelete)
+	for _, cmd := range cmdsToDelete {
+		err := lmao.client.DeleteCommand(application_id, cmd.ID)
+		if err != nil {
+			return nil, errors.New(fmt.Sprint("failed to delete command ", cmd.ID, ": ", err.Error()))
+		}
+	}
 
-	return &lmao
+	// Register commands
+	cmd := api.CreateCommandData{
+		Name:        "test",
+		Description: "This is a test command. Say no more. Just say hi.",
+	}
+	logrus.Infof("Registering commands: %+v", cmd)
+	_, err = lmao.client.CreateCommand(application_id, cmd)
+	if err != nil {
+		return nil, errors.New("failed to create command: " + err.Error())
+	}
+
+	return &lmao, nil
 }
 
 // Handles a discord interaction event and returns an interaction response.
