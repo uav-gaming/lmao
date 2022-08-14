@@ -49,8 +49,8 @@ func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.
 	}
 
 	// Delete commands.
-	logrus.Infof("Deleting commands: %+v", cmdsToDelete)
 	for _, cmd := range cmdsToDelete {
+		logrus.Infof("Deleting command: %+v", *cmd)
 		err := lmao.client.DeleteCommand(application_id, cmd.ID)
 		if err != nil {
 			return nil, errors.New(fmt.Sprint("failed to delete command ", cmd.ID, ": ", err.Error()))
