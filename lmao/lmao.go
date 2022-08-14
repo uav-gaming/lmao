@@ -11,8 +11,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/sirupsen/logrus"
-	"github.com/uav-gaming/lmao/lmao/interaction/command"
-	"github.com/uav-gaming/lmao/lmao/interaction/ping"
+	"github.com/uav-gaming/lmao/lmao/commands"
 )
 
 // A threadsafe instance of the LMAO discord bot for handling requests.
@@ -20,6 +19,7 @@ type LMAO struct {
 	client         *api.Client
 	public_key     ed25519.PublicKey
 	application_id discord.AppID
+	cmds           commands.CommandRegistrar
 }
 
 // Create a LMAO instance.
@@ -31,6 +31,7 @@ func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.
 		api.NewClient("Bot " + token),
 		public_key,
 		application_id,
+		commands.NewCommandRegistrar(),
 	}
 
 	// Check for existing commands.
@@ -94,11 +95,15 @@ func (bot *LMAO) handleInteraction(event discord.InteractionEvent) (*api.Interac
 	interaction_type := event.Data.InteractionType()
 	switch event.Data.InteractionType() {
 	case discord.PingInteractionType:
-		return ping.HandlePingInteraction()
+		logrus.Info("Received ping. Responding with pong.")
+		return &api.InteractionResponse{
+			Type: api.PongInteraction,
+		}, nil
 
 	case discord.CommandInteractionType:
 		cmd := event.Data.(*discord.CommandInteraction)
-		return command.HandleCommandInteraction(cmd)
+		bot.cmds.HandleCommand(cmd)
+		return nil, errors.New("idk buddy. cant do slash cmd rn")
 
 	default:
 		error_message := fmt.Sprint("Unrecognized interaction type: ", interaction_type)
