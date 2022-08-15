@@ -11,7 +11,7 @@ import (
 type CommandHandler func(discord.UserID) (*api.InteractionResponse, error)
 
 // Registory for keeping track of commands and its handlers.
-// Absolutly **NOT** threadsafe
+// Registering new commands/subcommands is absolutly **NOT** threadsafe
 type CommandRegistrar struct {
 	Commands []api.CreateCommandData
 	handlers map[string]*Command
