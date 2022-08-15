@@ -84,6 +84,7 @@ func (bot *LMAO) HandleInteraction(event discord.InteractionEvent) *api.Interact
 			},
 		}
 	}
+	logrus.WithField("response", *resp).Info("Responding to discord with response")
 	return resp
 }
 
@@ -101,7 +102,7 @@ func (bot *LMAO) handleInteraction(event discord.InteractionEvent) (*api.Interac
 
 	case discord.CommandInteractionType:
 		cmd := event.Data.(*discord.CommandInteraction)
-		return bot.cmds.HandleCommand(cmd)
+		return bot.cmds.HandleCommand(event.SenderID(), cmd)
 
 	default:
 		error_message := fmt.Sprint("Unrecognized interaction type: ", interaction_type)

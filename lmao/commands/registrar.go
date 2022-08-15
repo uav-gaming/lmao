@@ -48,13 +48,13 @@ func (reg *CommandRegistrar) AddCommand(name, description string) *Command {
 }
 
 // Handle a command request
-func (reg *CommandRegistrar) HandleCommand(command *discord.CommandInteraction) (*api.InteractionResponse, error) {
+func (reg *CommandRegistrar) HandleCommand(userID discord.UserID, command *discord.CommandInteraction) (*api.InteractionResponse, error) {
 	handler, found := reg.handlers[command.Name]
 	if !found {
 		logrus.Errorf("Received unknown command.\nRegistered commands:\n%+v\nReceived command:\n%+v", reg.Commands, command)
 		return nil, errors.New("unknown command " + command.Name)
 	}
-	return handler.HandleSubcommand(command.Options)
+	return handler.HandleSubcommand(userID, command.Options)
 }
 
 type Command struct {
@@ -71,7 +71,7 @@ func NewCommand(command *api.CreateCommandData) Command {
 }
 
 // Handle a request.
-func (cmd *Command) HandleSubcommand(options discord.CommandInteractionOptions) (*api.InteractionResponse, error) {
+func (cmd *Command) HandleSubcommand(userID discord.UserID, options discord.CommandInteractionOptions) (*api.InteractionResponse, error) {
 	// Validate request.
 	if len(options) != 1 {
 		logrus.Errorf("Expect only one option but got %+v", options)
@@ -85,14 +85,12 @@ func (cmd *Command) HandleSubcommand(options discord.CommandInteractionOptions) 
 
 	// Handle subcommand.
 	subCmd := option.Name
-	_, found := cmd.handlers[subCmd]
+	handler, found := cmd.handlers[subCmd]
 	if !found {
 		logrus.Errorf("Received unknown command.\nRegistered commands:\n%+v\nReceived command:\n%+v", cmd.command, option)
 		return nil, errors.New("unknown subcommand " + subCmd)
 	}
-	// TODO: actually handle it
-	logrus.Error("bruh you forgot to implment the handling logic")
-	return nil, errors.New("go fix your `HandleSubcommand`")
+	return handler(userID)
 }
 
 // Add a subcommand within the group.

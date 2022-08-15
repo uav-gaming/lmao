@@ -3,14 +3,12 @@ package commands
 import (
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/arikawa/v3/utils/json/option"
 )
 
 func ProfileCommandHandler(discord.UserID) (*api.InteractionResponse, error) {
 	return &api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{
-			Content: option.NewNullableString("Some content here"),
 			Embeds: &[]discord.Embed{
 
 				{
