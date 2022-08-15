@@ -3,24 +3,32 @@ package commands
 import (
 	"errors"
 
+	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/sirupsen/logrus"
 )
 
-type CommandHandler func(discord.UserID) string
+type CommandHandler func(discord.UserID) (*api.InteractionResponse, error)
 
 // Registory for keeping track of commands and its handlers.
 // Absolutly **NOT** threadsafe
 type CommandRegistrar struct {
-	Commands []discord.Command
+	Commands []api.CreateCommandData
 	handlers map[string]*Command
 }
 
 func NewCommandRegistrar() CommandRegistrar {
 	return CommandRegistrar{
-		make([]discord.Command, 0),
+		make([]api.CreateCommandData, 0),
 		make(map[string]*Command),
 	}
+}
+
+func DefaultCommandRegistrar() CommandRegistrar {
+	reg := NewCommandRegistrar()
+	lmao := reg.AddCommand("lmao", "access lmao utils")
+	lmao.AddSubcommand("profile", "get the profile of the linked user", ProfileCommandHandler)
+	return reg
 }
 
 func (reg *CommandRegistrar) AddCommand(name, description string) *Command {
@@ -28,7 +36,10 @@ func (reg *CommandRegistrar) AddCommand(name, description string) *Command {
 		logrus.Fatal("Adding command ", name, " but it already exists: %+v", reg.Commands)
 	}
 
-	reg.Commands = append(reg.Commands, discord.NewCommand(name, description))
+	reg.Commands = append(reg.Commands, api.CreateCommandData{
+		Name:        name,
+		Description: description,
+	})
 	// Pointer to the command we just inserted
 	cmdPtr := &reg.Commands[len(reg.Commands)-1]
 	cmd := NewCommand(cmdPtr)
@@ -37,7 +48,7 @@ func (reg *CommandRegistrar) AddCommand(name, description string) *Command {
 }
 
 // Handle a command request
-func (reg *CommandRegistrar) HandleCommand(command *discord.CommandInteraction) (*string, error) {
+func (reg *CommandRegistrar) HandleCommand(command *discord.CommandInteraction) (*api.InteractionResponse, error) {
 	handler, found := reg.handlers[command.Name]
 	if !found {
 		logrus.Errorf("Received unknown command.\nRegistered commands:\n%+v\nReceived command:\n%+v", reg.Commands, command)
@@ -47,12 +58,12 @@ func (reg *CommandRegistrar) HandleCommand(command *discord.CommandInteraction) 
 }
 
 type Command struct {
-	command  *discord.Command
+	command  *api.CreateCommandData
 	handlers map[string]CommandHandler
 }
 
 // Create a new command.
-func NewCommand(command *discord.Command) Command {
+func NewCommand(command *api.CreateCommandData) Command {
 	return Command{
 		command,
 		make(map[string]CommandHandler),
@@ -60,7 +71,7 @@ func NewCommand(command *discord.Command) Command {
 }
 
 // Handle a request.
-func (cmd *Command) HandleSubcommand(options discord.CommandInteractionOptions) (*string, error) {
+func (cmd *Command) HandleSubcommand(options discord.CommandInteractionOptions) (*api.InteractionResponse, error) {
 	// Validate request.
 	if len(options) != 1 {
 		logrus.Errorf("Expect only one option but got %+v", options)
@@ -73,10 +84,10 @@ func (cmd *Command) HandleSubcommand(options discord.CommandInteractionOptions) 
 	}
 
 	// Handle subcommand.
-	subCmd := option.String()
+	subCmd := option.Name
 	_, found := cmd.handlers[subCmd]
 	if !found {
-		logrus.Errorf("Received unknown command.\nRegistered commands:\n%+v\nReceived command:\n%+v", cmd.command, subCmd)
+		logrus.Errorf("Received unknown command.\nRegistered commands:\n%+v\nReceived command:\n%+v", cmd.command, option)
 		return nil, errors.New("unknown subcommand " + subCmd)
 	}
 	// TODO: actually handle it
@@ -86,8 +97,15 @@ func (cmd *Command) HandleSubcommand(options discord.CommandInteractionOptions) 
 
 // Add a subcommand within the group.
 func (cmd *Command) AddSubcommand(name, description string, handler CommandHandler) {
+	// Insert into handlers
 	if _, exists := cmd.handlers[name]; exists {
 		logrus.Fatal("Adding subcommand ", name, " but it already exists: %+v", *cmd)
 	}
 	cmd.handlers[name] = handler
+
+	// Insert into subcommand field
+	cmd.command.Options = append(cmd.command.Options, &discord.SubcommandOption{
+		OptionName:  name,
+		Description: description,
+	})
 }

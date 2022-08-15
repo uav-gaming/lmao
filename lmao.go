@@ -50,7 +50,7 @@ func init() {
 }
 
 func HandleRequest(ctx context.Context, request lmao.Request) (lmao.Response, error) {
-	logrus.Infof("Received request %+v", request)
+	logrus.WithField("request", request).Info("Handling request")
 
 	// Verify request signature.
 	if !bot.VerifyRequest(request) {

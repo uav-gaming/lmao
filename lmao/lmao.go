@@ -31,7 +31,7 @@ func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.
 		api.NewClient("Bot " + token),
 		public_key,
 		application_id,
-		commands.NewCommandRegistrar(),
+		commands.DefaultCommandRegistrar(),
 	}
 
 	// Check for existing commands.
@@ -59,14 +59,13 @@ func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.
 	}
 
 	// Register commands
-	cmd := api.CreateCommandData{
-		Name:        "test",
-		Description: "This is a test command. Say no more. Just say hi.",
-	}
-	logrus.Infof("Registering commands: %+v", cmd)
-	_, err = lmao.client.CreateCommand(application_id, cmd)
-	if err != nil {
-		return nil, errors.New("failed to create command: " + err.Error())
+	for _, cmd := range lmao.cmds.Commands {
+		logrus.Infof("Registering commands: %+v", cmd)
+
+		_, err := lmao.client.CreateCommand(application_id, cmd)
+		if err != nil {
+			return nil, errors.New("failed to create command: " + err.Error())
+		}
 	}
 
 	return &lmao, nil
@@ -75,7 +74,7 @@ func NewLMAO(token string, public_key ed25519.PublicKey, application_id discord.
 // Handles a discord interaction event and returns an interaction response.
 // It always sends back a discord message response to let the user know what happened.
 func (bot *LMAO) HandleInteraction(event discord.InteractionEvent) *api.InteractionResponse {
-	logrus.Info("Received interaction event: ", event)
+	logrus.WithField("interaction", event).Info("Handling interaction event")
 	resp, err := bot.handleInteraction(event)
 	if err != nil {
 		resp = &api.InteractionResponse{
@@ -102,8 +101,7 @@ func (bot *LMAO) handleInteraction(event discord.InteractionEvent) (*api.Interac
 
 	case discord.CommandInteractionType:
 		cmd := event.Data.(*discord.CommandInteraction)
-		bot.cmds.HandleCommand(cmd)
-		return nil, errors.New("idk buddy. cant do slash cmd rn")
+		return bot.cmds.HandleCommand(cmd)
 
 	default:
 		error_message := fmt.Sprint("Unrecognized interaction type: ", interaction_type)

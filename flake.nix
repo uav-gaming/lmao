@@ -16,6 +16,7 @@
         buildInputs = with pkgs; [
           act
           go_1_18
+          golangci-lint
           nodePackages.serverless
         ];  
       };
